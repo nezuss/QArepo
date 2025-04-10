@@ -1,34 +1,82 @@
-﻿//! SEQA
-using System;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
+﻿using System.Text;
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.Support.UI;
+using System.Text;
 
-namespace SeleniumTests
+namespace NUnit_SEQA
 {
     [TestFixture]
-    public class UntitledTestCase
+    public class Tests
     {
         private IWebDriver driver;
-        private StringBuilder verificationErrors;
         private string baseURL;
-        private bool acceptNextAlert = true;
-        
+        private StringBuilder verificationErrors;
+        private string path;
+
         [SetUp]
-        public void SetupTest()
+        public void Setup()
         {
             driver = new FirefoxDriver();
-            baseURL = "https://www.google.com/";
+            baseURL = "https://the-internet.herokuapp.com/dynamic_controls";
             verificationErrors = new StringBuilder();
+            path = "C:/Users/AkuToR/source/repos/NUnit_SEQA/";
         }
-        
+
+        [Test]
+        public async void Test1()
+        {
+            driver.Navigate().GoToUrl(baseURL);
+
+            ClassicAssert.AreEqual("The Internet", driver.Title);
+
+            Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
+            screenshot.SaveAsFile(path + "scr_start.png");
+
+            //? Checking Remove/add
+            var checkboxRemoveButton = driver.FindElement(By.XPath("//button[contains(text(),'Remove')]"));
+            checkboxRemoveButton.Click();
+
+            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+            wait.Until(d => d.FindElement(By.Id("message")).Text == "It's gone!");
+
+            screenshot = ((ITakesScreenshot)driver).GetScreenshot();
+            screenshot.SaveAsFile(path + "scr_checkbox_removed.png");
+
+            Assert.Throws<NoSuchElementException>(() => driver.FindElement(By.Id("checkbox")));
+
+            var checkboxAddButton = driver.FindElement(By.XPath("//button[contains(text(),'Add')]"));
+            checkboxAddButton.Click();
+
+            wait.Until(d => d.FindElement(By.Id("message")).Text == "It's back!");
+
+            screenshot = ((ITakesScreenshot)driver).GetScreenshot();
+            screenshot.SaveAsFile(path + "scr_checkbox_added.png");
+
+            //? Checking Enable/Disable
+            var enableButton = driver.FindElement(By.XPath("//button[contains(text(),'Enable')]"));
+            enableButton.Click();
+
+            wait.Until(d => d.FindElement(By.Id("message")).Text == "It's enabled!");
+
+            screenshot = ((ITakesScreenshot)driver).GetScreenshot();
+            screenshot.SaveAsFile(path + "scr_input_enabled.png");
+
+            var disableButton = driver.FindElement(By.XPath("//button[contains(text(),'Disable')]"));
+            disableButton.Click();
+
+            Assert.Throws<NoSuchElementException>(() => driver.FindElement(By.Id("input-example")).FindElement(By.XPath("//input[@disabled]")));
+
+            wait.Until(d => d.FindElement(By.Id("message")).Text == "It's disabled!");
+
+            screenshot = ((ITakesScreenshot)driver).GetScreenshot();
+            screenshot.SaveAsFile(path + "scr_input_disabled.png");
+        }
+
         [TearDown]
-        public void TeardownTest()
+        public void Teardown()
         {
             try
             {
@@ -40,23 +88,14 @@ namespace SeleniumTests
             }
             ClassicAssert.AreEqual("", verificationErrors.ToString());
         }
-        
-        [Test]
-        public void TheUntitledTestCaseTest()
-        {
-            driver.Navigate().GoToUrl("https://katalon.com/");
-            driver.FindElement(By.XPath("//img[@alt='Katalon Logo']")).Click();
-            driver.FindElement(By.LinkText("Contact us")).Click();
-            Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
-            screenshot.SaveAsFile("C:\\Users\\AkuToR\\Desktop\\qa\\screenshot.png");
-        }
 
-        public static void Main(string[] args)
+        static public void Main(string[] args)
         {
-            UntitledTestCase test = new UntitledTestCase();
-            test.SetupTest();
-            test.TheUntitledTestCaseTest();
-            test.TeardownTest();
+            Tests tests = new Tests();
+            Console.WriteLine("Starting tests...");
+            tests.Setup();
+            tests.Test1();
+            tests.Teardown();
         }
     }
 }
